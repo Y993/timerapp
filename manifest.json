@@ -1,0 +1,16 @@
+{
+  "name": "鎌取⇄幕張 時刻表",
+  "short_name": "時刻表",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d0d1a",
+  "theme_color": "#0d0d1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
