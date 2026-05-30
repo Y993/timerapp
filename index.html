@@ -10,34 +10,47 @@
   <link rel="manifest" href="manifest.json">
   <title>鎌取⇄幕張</title>
   <style>
+    /* ══ テーマ変数（JS から上書き） ══ */
+    :root {
+      --bg:    #060612;
+      --bg2:   #0d1b2e;
+      --ac:    #4fc3f7;
+      --gf:    #ffffff;
+      --gm:    #c8e9ff;
+      --gt:    #4fc3f7;
+      --g1:    rgba(79,195,247,.85);
+      --g2:    rgba(79,195,247,.40);
+      --g3:    rgba(79,195,247,.18);
+      --gbg:   rgba(79,195,247,.07);
+    }
+
     *, *::before, *::after {
       margin: 0; padding: 0; box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
     html, body {
       width: 100%; height: 100%; overflow: hidden;
-      background: #060612; color: #fff;
+      background: var(--bg); color: #fff;
       font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
     }
 
-    /* ── スワイプラッパー ── */
+    /* ── スワイプ ── */
     #wrap {
       display: flex; width: 300%; height: 100%;
       transition: transform .35s cubic-bezier(.4,0,.2,1);
-      will-change: transform;
     }
     .page {
       width: 33.333%; height: 100%; flex-shrink: 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding:
-        max(env(safe-area-inset-top,0px), 0px)
-        max(env(safe-area-inset-right,16px), 16px)
-        max(env(safe-area-inset-bottom,0px), 32px)
-        max(env(safe-area-inset-left,16px), 16px);
+        max(env(safe-area-inset-top,0px),0px)
+        max(env(safe-area-inset-right,16px),16px)
+        max(env(safe-area-inset-bottom,0px),32px)
+        max(env(safe-area-inset-left,16px),16px);
       overflow: hidden;
     }
 
-    /* ── ドット ── */
+    /* ── ページドット ── */
     #dots {
       position: fixed;
       bottom: calc(max(env(safe-area-inset-bottom,0px),0px) + 14px);
@@ -48,92 +61,114 @@
       width: 7px; height: 7px; border-radius: 50%;
       background: rgba(255,255,255,.22); transition: background .25s;
     }
-    .dot.on { background: #fff; }
+    .dot.on { background: var(--ac); }
 
     /* ════════════════════════════════
-       PAGE 1 – 時計（ネオンスタイル）
+       PAGE 1 — 時計（大型ネオン）
     ════════════════════════════════ */
     .clock-page {
-      background:
-        radial-gradient(ellipse 80% 60% at 50% 45%, #0d1b2e 0%, #060612 70%);
-      position: relative; overflow: hidden;
+      background: radial-gradient(ellipse 85% 65% at 50% 46%, var(--bg2) 0%, var(--bg) 68%);
+      position: relative; overflow: hidden; cursor: pointer;
+      user-select: none;
     }
     .clock-page::before {
       content: ''; position: absolute; inset: 0;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(79,195,247,.07) 0%, transparent 55%);
-      pointer-events: none;
+      background: radial-gradient(circle at 50% 48%, var(--gbg) 0%, transparent 58%);
+      pointer-events: none; transition: background .4s;
     }
 
-    /* 縦画面レイアウト：時間＋秒バー＋日付 縦並び */
-    .clock-wrapper {
+    .clock-wrap {
       position: relative; z-index: 1;
       display: flex; flex-direction: column; align-items: center;
     }
 
     .clock-sup {
-      font-size: clamp(8px, 2.3vw, 13px);
-      letter-spacing: .55em; color: rgba(79,195,247,.45);
-      font-weight: 300; margin-bottom: clamp(6px, 2vw, 14px);
-      text-transform: uppercase;
+      font-size: clamp(8px, 2.2vw, 12px);
+      letter-spacing: .55em; color: var(--ac); opacity: .5;
+      font-weight: 300; margin-bottom: clamp(4px, 1.5vw, 10px);
+      text-transform: uppercase; transition: color .4s;
     }
 
-    /* 時・分ブロック */
     #clock-time {
-      font-size: clamp(72px, min(22vw, 40vh), 160px);
+      font-size: clamp(90px, min(34vw, 43vh), 220px);
       font-weight: 100; letter-spacing: -.025em; line-height: 1;
       font-variant-numeric: tabular-nums;
-      background: linear-gradient(155deg, #ffffff 0%, #c8e9ff 40%, #4fc3f7 100%);
+      background: linear-gradient(155deg, var(--gf) 0%, var(--gm) 38%, var(--gt) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
       filter:
-        drop-shadow(0 0 14px rgba(79,195,247,.85))
-        drop-shadow(0 0 36px rgba(79,195,247,.40))
-        drop-shadow(0 0 70px rgba(79,195,247,.18));
+        drop-shadow(0 0 12px var(--g1))
+        drop-shadow(0 0 32px var(--g2))
+        drop-shadow(0 0 70px var(--g3));
+      transition: filter .4s;
     }
-
     .colon {
       display: inline-block;
-      animation: colon-pulse 1s ease-in-out infinite;
+      animation: blink 1s ease-in-out infinite;
     }
-    @keyframes colon-pulse { 0%,100%{opacity:1} 50%{opacity:.12} }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.10} }
 
-    /* 秒バー */
+    .clock-sub {
+      margin-top: clamp(10px, 2.5vw, 20px);
+      display: flex; flex-direction: column; align-items: center; gap: clamp(8px,2vw,14px);
+    }
+
     .sec-row {
       display: flex; align-items: center; gap: 10px;
-      margin-top: clamp(12px, 3vw, 22px);
-      width: clamp(160px, 52vw, 320px);
+      width: clamp(160px, 52vw, 340px);
     }
     .sec-track {
       flex: 1; height: 3px;
-      background: rgba(79,195,247,.13); border-radius: 2px; overflow: hidden;
+      background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden;
     }
     #sec-bar {
       height: 100%; width: 0%; border-radius: 2px;
-      background: linear-gradient(90deg, #29b6f6, #81d4fa);
-      box-shadow: 0 0 8px #4fc3f7, 0 0 18px rgba(79,195,247,.45);
+      background: linear-gradient(90deg, var(--gt), var(--ac));
+      box-shadow: 0 0 8px var(--ac), 0 0 18px var(--g3);
+      transition: color .4s;
     }
     #clock-sec {
-      font-size: clamp(14px, 3.8vw, 20px);
-      color: #4fc3f7; font-variant-numeric: tabular-nums;
+      font-size: clamp(14px, 3.8vw, 22px);
+      color: var(--ac); font-variant-numeric: tabular-nums;
       font-weight: 300; min-width: 2.2ch; text-align: right;
+      transition: color .4s;
     }
 
-    /* 日付 */
     #clock-date {
-      margin-top: clamp(10px, 2.5vw, 18px);
-      font-size: clamp(12px, 3.6vw, 20px);
+      font-size: clamp(13px, 3.8vw, 22px);
       color: rgba(255,255,255,.42); font-weight: 300; letter-spacing: .05em;
     }
 
+    /* テーマドット */
+    .theme-dots {
+      margin-top: clamp(12px, 3vw, 22px);
+      display: flex; gap: 10px;
+    }
+    .tdot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,.18); transition: background .3s, transform .3s;
+    }
+    .tdot.on {
+      background: var(--ac); transform: scale(1.5);
+    }
+
+    /* テーマ名フラッシュ */
+    #theme-name {
+      position: absolute; bottom: 52px; left: 50%; transform: translateX(-50%);
+      font-size: clamp(10px, 2.5vw, 13px); letter-spacing: .4em;
+      color: var(--ac); opacity: 0;
+      text-transform: uppercase; pointer-events: none;
+      transition: opacity .35s;
+    }
+
     /* ════════════════════════════════
-       PAGE 2 – カレンダー
+       PAGE 2 — カレンダー
     ════════════════════════════════ */
     .cal-page { justify-content: flex-start; }
 
     .cal-scroll {
       width: 100%; overflow-y: auto;
-      padding: 48px 0 36px;
+      padding: 50px 0 40px;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -142,43 +177,44 @@
       margin-bottom: 16px;
     }
     .cal-nav {
-      width: 38px; height: 38px; border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       border: none; background: rgba(255,255,255,.09); color: #fff;
-      font-size: 20px; cursor: pointer;
+      font-size: 22px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
-    #cal-label { font-size: clamp(16px, 5vw, 22px); font-weight: 300; }
+    #cal-label { font-size: clamp(18px, 5.5vw, 26px); font-weight: 300; }
 
     .cal-wdays {
       display: grid; grid-template-columns: repeat(7,1fr);
-      margin-bottom: 5px;
+      margin-bottom: 6px;
     }
     .cal-wd {
-      text-align: center; font-size: clamp(10px, 3vw, 13px);
-      color: rgba(255,255,255,.3); padding: 4px 0;
+      text-align: center; font-size: clamp(11px, 3.2vw, 15px);
+      color: rgba(255,255,255,.32); padding: 4px 0;
     }
-    .cal-wd:first-child { color: rgba(255,100,100,.6); }
-    .cal-wd:last-child  { color: rgba(120,160,255,.6); }
+    .cal-wd:first-child { color: rgba(255,100,100,.65); }
+    .cal-wd:last-child  { color: rgba(120,160,255,.65); }
 
-    .cal-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+    .cal-days { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
     .cd {
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-      font-size: clamp(12px, 3.6vw, 17px); border-radius: 50%;
-      color: rgba(255,255,255,.8); cursor: default;
+      font-size: clamp(15px, 4.6vw, 22px); /* ← 大きめ・太め */
+      font-weight: 500;
+      border-radius: 50%; color: rgba(255,255,255,.88);
     }
-    .cd.sun   { color: rgba(255,100,100,.85); }
-    .cd.sat   { color: rgba(120,160,255,.85); }
-    .cd.hol   { color: rgba(255,100,100,.85); }
-    .cd.other { color: rgba(255,255,255,.2); }
-    .cd.today { background: #4fc3f7; color: #060612 !important; font-weight: 700; }
+    .cd.sun   { color: rgba(255,100,100,.9); }
+    .cd.sat   { color: rgba(120,160,255,.9); }
+    .cd.hol   { color: rgba(255,100,100,.9); }
+    .cd.other { color: rgba(255,255,255,.2); font-weight: 400; }
+    .cd.today { background: var(--ac); color: #060612 !important; font-weight: 800; }
 
     /* ════════════════════════════════
-       PAGE 3 – 時刻表
+       PAGE 3 — 時刻表
     ════════════════════════════════ */
     .train-page { justify-content: flex-start; overflow-y: auto; }
 
     .train-inner {
-      width: 100%; padding: 48px 0 36px;
+      width: 100%; padding: 50px 0 40px;
       display: flex; flex-direction: column;
       -webkit-overflow-scrolling: touch;
     }
@@ -186,7 +222,7 @@
     .route-title {
       text-align: center; font-weight: 300;
       font-size: clamp(11px, 3vw, 14px);
-      color: rgba(255,255,255,.32); margin-bottom: 12px;
+      color: rgba(255,255,255,.3); margin-bottom: 12px;
     }
 
     .toggles { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 14px; }
@@ -196,37 +232,34 @@
       font-size: clamp(12px, 3.4vw, 15px); border: none; background: transparent;
       color: rgba(255,255,255,.4); border-radius: 8px; cursor: pointer; transition: all .2s;
     }
-    .tb.on { background: #4fc3f7; color: #060612; font-weight: 600; }
+    .tb.on { background: var(--ac); color: #060612; font-weight: 600; }
 
     #train-list { width: 100%; display: flex; flex-direction: column; gap: 9px; }
 
     .tcard {
       background: rgba(255,255,255,.055); border-radius: 14px;
-      padding: 12px 15px;
-      border: 1px solid rgba(255,255,255,.07);
+      padding: 12px 15px; border: 1px solid rgba(255,255,255,.07);
     }
     .tcard.nxt { background: rgba(79,195,247,.1); border-color: rgba(79,195,247,.28); }
 
-    .tcard-top {
-      display: flex; align-items: flex-start; justify-content: space-between;
-    }
+    .tcard-top { display: flex; align-items: flex-start; justify-content: space-between; }
 
-    .tc-left {}
     .tc-label { font-size: clamp(10px,2.8vw,12px); color: rgba(255,255,255,.32); margin-bottom: 2px; }
-    .nxt .tc-label { color: #4fc3f7; }
+    .nxt .tc-label { color: var(--ac); }
     .tc-dep {
       font-size: clamp(32px,8.5vw,46px); font-weight: 200;
       font-variant-numeric: tabular-nums; line-height: 1; color: #fff;
     }
-    .tc-dep-st { font-size: clamp(9px,2.5vw,11px); color: rgba(255,255,255,.3); margin-top: 2px; }
+    .tc-dep-st { font-size: clamp(9px,2.4vw,11px); color: rgba(255,255,255,.3); margin-top: 2px; }
 
     .tc-right { text-align: right; }
     .tc-row { display: flex; align-items: baseline; justify-content: flex-end; gap: 5px; }
-    .tc-row + .tc-row { margin-top: 4px; }
+    .tc-row + .tc-row { margin-top: 5px; }
     .tc-lbl { font-size: clamp(9px,2.4vw,11px); color: rgba(255,255,255,.3); }
-    .tc-val { font-size: clamp(15px,4.2vw,20px); font-variant-numeric: tabular-nums; color: rgba(255,255,255,.72); }
-    .tc-row.dest .tc-lbl { color: rgba(79,195,247,.6); }
-    .tc-row.dest .tc-val { color: #81d4fa; font-size: clamp(16px,4.5vw,21px); }
+    .tc-val { font-size: clamp(16px,4.4vw,22px); font-variant-numeric: tabular-nums; color: rgba(255,255,255,.72); }
+    .tc-row.dest .tc-lbl { color: rgba(79,195,247,.65); }
+    .tc-row.dest .tc-val { color: #81d4fa; font-size: clamp(18px,4.8vw,24px); }
+    .tc-row.miss .tc-val { color: rgba(255,120,120,.75); font-size: clamp(13px,3.5vw,17px); }
 
     .tcard-bot {
       display: flex; align-items: center; justify-content: space-between;
@@ -234,101 +267,77 @@
       border-top: 1px solid rgba(255,255,255,.06);
     }
     .tc-via  { font-size: clamp(9px,2.4vw,11px); color: rgba(255,255,255,.22); }
-    .tc-cdwn { font-size: clamp(11px,3vw,13px); color: #4fc3f7; }
+    .tc-cdwn { font-size: clamp(11px,3vw,13px); color: var(--ac); }
 
     .no-train { text-align: center; color: rgba(255,255,255,.28); font-size: 4vw; padding: 24px 0; }
 
     /* ════════════════════════════════
-       横画面レイアウト（LANDSCAPE）
+       横画面（LANDSCAPE）
     ════════════════════════════════ */
     @media (orientation: landscape) {
-
       .page {
         padding:
-          max(env(safe-area-inset-top,0px), 0px)
-          max(env(safe-area-inset-right,16px), 16px)
-          max(env(safe-area-inset-bottom,0px), 24px)
-          max(env(safe-area-inset-left,16px), 16px);
+          max(env(safe-area-inset-top,0px),0px)
+          max(env(safe-area-inset-right,16px),16px)
+          max(env(safe-area-inset-bottom,0px),24px)
+          max(env(safe-area-inset-left,16px),16px);
         justify-content: center;
       }
-
-      #dots { bottom: max(env(safe-area-inset-bottom,0px), 7px); }
+      #dots { bottom: max(env(safe-area-inset-bottom,0px),6px); }
       .dot  { width: 6px; height: 6px; }
 
-      /* ── 時計：左に時刻・右に秒バー＋日付 ── */
-      .clock-wrapper {
+      /* 時計：左=時刻 / 右=秒+日付 */
+      .clock-wrap {
         flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: clamp(20px, 4vw, 56px);
+        gap: clamp(18px, 4vw, 52px);
         width: 100%;
       }
       .clock-sup { display: none; }
+      #clock-time { font-size: clamp(70px, 30vh, 210px); white-space: nowrap; }
+      .clock-sub  { align-items: flex-start; margin-top: 0; }
+      .sec-row    { width: clamp(120px, 20vw, 230px); }
+      #clock-sec  { font-size: clamp(12px, 3.5vh, 20px); }
+      #clock-date { font-size: clamp(12px, 3.2vh, 20px); }
+      .theme-dots { margin-top: clamp(8px, 2vh, 14px); }
+      #theme-name { bottom: 44px; }
 
-      #clock-time {
-        font-size: clamp(70px, 30vh, 200px);
-        white-space: nowrap;
-      }
-
-      .clock-info {
-        align-items: flex-start;
-        margin-top: 0;
-      }
-      .sec-row {
-        margin-top: 0;
-        width: clamp(120px, 20vw, 220px);
-      }
-      #clock-sec  { font-size: clamp(13px, 3.5vh, 20px); }
-      #clock-date { margin-top: clamp(8px, 2vh, 16px); font-size: clamp(12px, 3.2vh, 19px); }
-
-      /* ── カレンダー ── */
-      .cal-page { justify-content: center; }
-      .cal-scroll {
-        padding: 0; overflow-y: visible;
-        display: flex; flex-direction: column; justify-content: center;
-        height: 100%; width: 100%;
-      }
-      .cal-head  { margin-bottom: 8px; }
-      #cal-label { font-size: clamp(14px, 4vh, 20px); }
-      .cal-nav   { width: 32px; height: 32px; font-size: 17px; }
-      .cal-wdays { margin-bottom: 3px; }
-      .cal-wd    { font-size: clamp(9px, 2.3vh, 13px); padding: 2px 0; }
-      .cal-days  { gap: 2px; }
+      /* カレンダー */
+      .cal-page   { justify-content: center; }
+      .cal-scroll { padding: 0; overflow-y: visible; height: 100%; display: flex; flex-direction: column; justify-content: center; }
+      .cal-head   { margin-bottom: 8px; }
+      #cal-label  { font-size: clamp(15px, 4.2vh, 22px); }
+      .cal-nav    { width: 32px; height: 32px; font-size: 17px; }
+      .cal-wdays  { margin-bottom: 3px; }
+      .cal-wd     { font-size: clamp(10px, 2.5vh, 14px); padding: 2px 0; }
+      .cal-days   { gap: 2px; }
       .cd {
         aspect-ratio: unset;
-        height: clamp(24px, 9vh, 44px);
-        font-size: clamp(10px, 2.6vh, 15px);
-        border-radius: 8px;
+        height: clamp(28px, 9.5vh, 46px);
+        font-size: clamp(12px, 3vh, 18px);
+        font-weight: 600; border-radius: 8px;
       }
-      .cd.today { border-radius: 8px; }
 
-      /* ── 時刻表 ── */
-      .train-page { justify-content: center; overflow-y: visible; }
-      .train-inner {
-        padding: 0; overflow-y: auto;
-        height: 100%; justify-content: center;
-        -webkit-overflow-scrolling: touch;
-      }
-      .route-title { margin-bottom: 6px; font-size: clamp(10px, 2.5vh, 13px); }
-
-      /* トグルを横並びに */
-      .toggles { flex-direction: row; gap: 8px; margin-bottom: 8px; }
-      .tg { flex: 1; }
-      .tb { padding: 7px 4px; font-size: clamp(10px, 2.8vh, 13px); }
-
-      /* カードを2列グリッドに */
-      #train-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .tcard { padding: 9px 12px; border-radius: 11px; }
-      .tc-label   { font-size: clamp(9px, 2vh, 11px); }
-      .tc-dep     { font-size: clamp(22px, 7.5vh, 40px); }
-      .tc-dep-st  { font-size: clamp(8px, 1.9vh, 10px); }
-      .tc-lbl     { font-size: clamp(8px, 2vh, 10px); }
-      .tc-val     { font-size: clamp(13px, 3.8vh, 17px); }
-      .tc-row.dest .tc-val { font-size: clamp(14px, 4vh, 18px); }
-      .tcard-bot  { margin-top: 5px; padding-top: 4px; }
-      .tc-via     { font-size: clamp(8px, 1.9vh, 10px); }
-      .tc-cdwn    { font-size: clamp(9px, 2.5vh, 12px); }
-      .no-train   { font-size: 3vh; }
+      /* 時刻表 */
+      .train-page   { justify-content: center; overflow-y: visible; }
+      .train-inner  { padding: 0; overflow-y: auto; height: 100%; justify-content: center; }
+      .route-title  { margin-bottom: 6px; font-size: clamp(10px, 2.5vh, 13px); }
+      .toggles      { flex-direction: row; gap: 8px; margin-bottom: 8px; }
+      .tg           { flex: 1; }
+      .tb           { padding: 7px 4px; font-size: clamp(10px, 2.8vh, 13px); }
+      #train-list   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .tcard        { padding: 9px 12px; border-radius: 11px; }
+      .tc-label     { font-size: clamp(9px, 2vh, 11px); }
+      .tc-dep       { font-size: clamp(22px, 7.5vh, 40px); }
+      .tc-dep-st    { font-size: clamp(8px, 1.9vh, 10px); }
+      .tc-lbl       { font-size: clamp(8px, 2vh, 10px); }
+      .tc-val       { font-size: clamp(13px, 3.8vh, 18px); }
+      .tc-row.dest .tc-val { font-size: clamp(14px, 4vh, 19px); }
+      .tcard-bot    { margin-top: 5px; padding-top: 4px; }
+      .tc-via       { font-size: clamp(8px, 1.9vh, 10px); }
+      .tc-cdwn      { font-size: clamp(9px, 2.5vh, 12px); }
+      .no-train     { font-size: 3vh; }
     }
   </style>
 </head>
@@ -337,22 +346,32 @@
 <div id="wrap">
 
   <!-- ── Page 1: 時計 ── -->
-  <div class="page clock-page">
-    <div class="clock-wrapper">
+  <div class="page clock-page" id="clock-pg">
+    <div class="clock-wrap">
+      <!-- 縦：左列 / 横：左パネル -->
       <div class="clock-main">
         <div class="clock-sup">LOCAL TIME</div>
         <div id="clock-time">
           <span id="ch">00</span><span class="colon">:</span><span id="cm">00</span>
         </div>
       </div>
-      <div class="clock-info">
+      <!-- 縦：右下 / 横：右パネル -->
+      <div class="clock-sub">
         <div class="sec-row">
           <div class="sec-track"><div id="sec-bar"></div></div>
           <div id="clock-sec">00</div>
         </div>
         <div id="clock-date"></div>
+        <div class="theme-dots" id="theme-dots">
+          <div class="tdot on" id="td0"></div>
+          <div class="tdot"    id="td1"></div>
+          <div class="tdot"    id="td2"></div>
+          <div class="tdot"    id="td3"></div>
+          <div class="tdot"    id="td4"></div>
+        </div>
       </div>
     </div>
+    <div id="theme-name"></div>
   </div>
 
   <!-- ── Page 2: カレンダー ── -->
@@ -375,7 +394,7 @@
   <!-- ── Page 3: 時刻表 ── -->
   <div class="page train-page">
     <div class="train-inner">
-      <div class="route-title">千葉駅乗り換え（目安時刻）</div>
+      <div class="route-title">千葉乗換3分想定 ／ 幕張着・鎌取着は実時間</div>
       <div class="toggles">
         <div class="tg">
           <button class="tb" id="btn-wd" onclick="setDay('wd')">平日</button>
@@ -389,16 +408,78 @@
       <div id="train-list"></div>
     </div>
   </div>
-
 </div>
 
 <div id="dots">
   <div class="dot on" id="d0"></div>
-  <div class="dot" id="d1"></div>
-  <div class="dot" id="d2"></div>
+  <div class="dot"    id="d1"></div>
+  <div class="dot"    id="d2"></div>
 </div>
 
 <script>
+// ============================================================
+//  テーマ定義（タップで切り替え）
+// ============================================================
+const THEMES = [
+  { name:'CYBER BLUE',
+    bg:'#060612', bg2:'#0d1b2e', ac:'#4fc3f7',
+    gf:'#ffffff', gm:'#c8e9ff', gt:'#4fc3f7',
+    g1:'rgba(79,195,247,.85)', g2:'rgba(79,195,247,.40)',
+    g3:'rgba(79,195,247,.18)', gbg:'rgba(79,195,247,.07)' },
+  { name:'VIOLET',
+    bg:'#0a0614', bg2:'#1c0b2e', ac:'#d09cf8',
+    gf:'#fff4ff', gm:'#e8c8ff', gt:'#d09cf8',
+    g1:'rgba(208,156,248,.85)', g2:'rgba(208,156,248,.40)',
+    g3:'rgba(208,156,248,.18)', gbg:'rgba(208,156,248,.07)' },
+  { name:'MATRIX',
+    bg:'#001208', bg2:'#002614', ac:'#69f0ae',
+    gf:'#eeffee', gm:'#a8f0c8', gt:'#69f0ae',
+    g1:'rgba(105,240,174,.85)', g2:'rgba(105,240,174,.40)',
+    g3:'rgba(105,240,174,.18)', gbg:'rgba(105,240,174,.07)' },
+  { name:'SUNSET',
+    bg:'#0e0602', bg2:'#1e1004', ac:'#ff8a50',
+    gf:'#fff8f0', gm:'#ffcc80', gt:'#ff8a50',
+    g1:'rgba(255,138,80,.85)', g2:'rgba(255,138,80,.40)',
+    g3:'rgba(255,138,80,.18)', gbg:'rgba(255,138,80,.07)' },
+  { name:'ICE',
+    bg:'#050510', bg2:'#0d0d24', ac:'#aad4f5',
+    gf:'#ffffff', gm:'#dceeff', gt:'#aad4f5',
+    g1:'rgba(170,212,245,.80)', g2:'rgba(170,212,245,.38)',
+    g3:'rgba(170,212,245,.16)', gbg:'rgba(170,212,245,.06)' },
+];
+
+let themeIdx = parseInt(localStorage.getItem('themeIdx') || '0');
+
+function applyTheme(t) {
+  const r = document.documentElement.style;
+  r.setProperty('--bg',  t.bg);
+  r.setProperty('--bg2', t.bg2);
+  r.setProperty('--ac',  t.ac);
+  r.setProperty('--gf',  t.gf);
+  r.setProperty('--gm',  t.gm);
+  r.setProperty('--gt',  t.gt);
+  r.setProperty('--g1',  t.g1);
+  r.setProperty('--g2',  t.g2);
+  r.setProperty('--g3',  t.g3);
+  r.setProperty('--gbg', t.gbg);
+  document.body.style.background = t.bg;
+  // ドット更新
+  for (let i = 0; i < 5; i++)
+    document.getElementById('td'+i).classList.toggle('on', i === themeIdx);
+}
+
+// テーマ切り替え（時計ページタップ）
+document.getElementById('clock-pg').addEventListener('click', () => {
+  themeIdx = (themeIdx + 1) % THEMES.length;
+  localStorage.setItem('themeIdx', themeIdx);
+  applyTheme(THEMES[themeIdx]);
+  const nm = document.getElementById('theme-name');
+  nm.textContent = THEMES[themeIdx].name;
+  nm.style.opacity = '1';
+  clearTimeout(window._thTm);
+  window._thTm = setTimeout(() => nm.style.opacity = '0', 1600);
+});
+
 // ============================================================
 //  日本の祝日
 // ============================================================
@@ -414,35 +495,29 @@ function buildHolidays(year) {
     }
     return -1;
   }
-  // 固定祝日
   add(1,1); add(2,11); add(2,23);
   add(4,29); add(5,3); add(5,4); add(5,5);
   add(8,11); add(11,3); add(11,23);
-  // ハッピーマンデー
-  add(1, nthMon(1,2));   // 成人の日
-  add(7, nthMon(7,3));   // 海の日
-  add(9, nthMon(9,3));   // 敬老の日
-  add(10, nthMon(10,2)); // スポーツの日
-  // 春分・秋分（固定テーブル）
+  add(1, nthMon(1,2)); add(7, nthMon(7,3));
+  add(9, nthMon(9,3)); add(10, nthMon(10,2));
   const EQ = {
     2024:{3:20,9:22}, 2025:{3:20,9:23}, 2026:{3:20,9:23},
     2027:{3:21,9:23}, 2028:{3:20,9:22}, 2029:{3:20,9:23}
   };
   if (EQ[year]) { add(3, EQ[year][3]); add(9, EQ[year][9]); }
-  // 振替休日（簡易）
-  Object.entries(h).forEach(([key]) => {
+  // 振替休日
+  Object.keys(h).forEach(key => {
     const dt = new Date(key);
-    if (dt.getDay() === 0) { // 祝日が日曜なら翌月曜
-      const next = new Date(dt); next.setDate(next.getDate()+1);
-      h[`${next.getFullYear()}-${next.getMonth()+1}-${next.getDate()}`] = true;
+    if (dt.getDay() === 0) {
+      const nx = new Date(dt); nx.setDate(nx.getDate() + 1);
+      h[`${nx.getFullYear()}-${nx.getMonth()+1}-${nx.getDate()}`] = true;
     }
   });
   return h;
 }
 
 // ============================================================
-//  時刻表データ
-//  [鎌取/幕張発(分), 千葉着(分)]  ※0時台は 24*60+分 で保存
+//  時刻表データ（分単位）
 // ============================================================
 function mkSched(map, travel) {
   const r = [];
@@ -454,7 +529,7 @@ function mkSched(map, travel) {
   return r.sort((a, b) => a[0] - b[0]);
 }
 
-// 鎌取 → 千葉（外房線）平日・休日共通
+// 鎌取 → 千葉（外房線） [発, 千葉着]
 const KAM_CHB = [
   [332,344],[362,376],[384,399],[402,417],[414,425],
   [428,439],[435,447],[439,452],[447,462],[464,475],
@@ -469,281 +544,258 @@ const KAM_CHB = [
   [1133,1145],[1152,1163],[1166,1177],[1180,1191],[1189,1200],
   [1200,1214],[1208,1222],[1225,1241],[1238,1250],
   [1260,1277],[1277,1290],[1286,1299],[1295,1305],
-  [1345,1356],[1354,1367],
-  [1382,1393],[1412,1423]
+  [1345,1356],[1354,1367],[1382,1393],[1412,1423]
 ];
 
-// 幕張 → 千葉（総武線）平日 ※所要10分
+// 幕張 → 千葉（総武線）平日 [発, 千葉着=発+10]
 const MAK_CHB_WD = mkSched({
-  4:[49], 5:[0,13,23,36,45,56],
+  4:[49],5:[0,13,23,36,45,56],
   6:[4,12,18,23,27,32,37,44,50,54],
   7:[0,4,8,13,16,20,24,29,34,39,44,52],
-  8:[0,8,16,23,31,41,50],
-  9:[1,9,17,24,32,41,48,55],
-  10:[3,10,18,26,32,43,54],
-  11:[5,16,26,37,48,59],
-  12:[10,21,32,43,54],
-  13:[5,16,27,38,49],
-  14:[0,10,21,32,43,54],
-  15:[5,16,27,38,50],
-  16:[1,11,17,28,38,48,54],
-  17:[3,13,23,31,39,48,56],
-  18:[2,8,16,22,27,37,47,53,58],
-  19:[7,14,19,28,33,39,48,53,59],
-  20:[5,12,22,31,41,46,53],
-  21:[3,10,16,22,29,38,44,54],
-  22:[3,11,17,27,33,43,49],
-  23:[1,9,22,36,55],
-  0:[11,33,51]
+  8:[0,8,16,23,31,41,50],9:[1,9,17,24,32,41,48,55],
+  10:[3,10,18,26,32,43,54],11:[5,16,26,37,48,59],
+  12:[10,21,32,43,54],13:[5,16,27,38,49],
+  14:[0,10,21,32,43,54],15:[5,16,27,38,50],
+  16:[1,11,17,28,38,48,54],17:[3,13,23,31,39,48,56],
+  18:[2,8,16,22,27,37,47,53,58],19:[7,14,19,28,33,39,48,53,59],
+  20:[5,12,22,31,41,46,53],21:[3,10,16,22,29,38,44,54],
+  22:[3,11,17,27,33,43,49],23:[1,9,22,36,55],0:[11,33,51]
 }, 10);
 
-// 幕張 → 千葉（総武線）休日 ※所要10分
+// 幕張 → 千葉（総武線）休日 [発, 千葉着=発+10]
 const MAK_CHB_HD = mkSched({
-  4:[49], 5:[0,14,36,47],
-  6:[2,17,23,31,39,47,53],
-  7:[0,11,19,28,37,43,48,59],
-  8:[6,13,23,33,43,53],
-  9:[3,13,23,33,44,55],
-  10:[6,16,26,36,46,56],
-  11:[6,16,26,36,46,56],
-  12:[6,16,26,36,46,56],
-  13:[6,16,26,36,46,56],
-  14:[6,16,26,36,46,56],
-  15:[6,16,26,36,46,56],
-  16:[6,16,26,36,46,56],
-  17:[6,16,26,36,46,56],
-  18:[6,16,26,36,46,56],
-  19:[6,16,26,36,46,56],
-  20:[7,18,29,40,51],
-  21:[2,12,22,33,44,54],
-  22:[5,16,27,34,43,49],
-  23:[1,9,20,36,55],
-  0:[14,33,51]
+  4:[49],5:[0,14,36,47],
+  6:[2,17,23,31,39,47,53],7:[0,11,19,28,37,43,48,59],
+  8:[6,13,23,33,43,53],9:[3,13,23,33,44,55],
+  10:[6,16,26,36,46,56],11:[6,16,26,36,46,56],
+  12:[6,16,26,36,46,56],13:[6,16,26,36,46,56],
+  14:[6,16,26,36,46,56],15:[6,16,26,36,46,56],
+  16:[6,16,26,36,46,56],17:[6,16,26,36,46,56],
+  18:[6,16,26,36,46,56],19:[6,16,26,36,46,56],
+  20:[7,18,29,40,51],21:[2,12,22,33,44,54],
+  22:[5,16,27,34,43,49],23:[1,9,20,36,55],0:[14,33,51]
 }, 10);
+
+// 千葉 → 鎌取（外房線下り）[千葉発, 鎌取着]  ※土日データ・平日共通使用
+const CHB_KAM = [
+  [321,331],[341,354],[355,368],[365,375],[388,400],
+  [401,411],[410,421],[430,442],[452,467],[466,480],
+  [481,492],[499,510],[514,524],[536,551],[556,568],
+  [567,584],[591,608],[610,623],[626,641],[655,668],
+  [671,683],[687,701],[714,728],[731,743],[747,759],
+  [774,788],[791,803],[807,818],[834,848],[851,863],
+  [867,881],[903,915],[915,926],[923,938],[944,955],
+  [960,970],[971,986],[984,998],[995,1011],[1010,1020],
+  [1027,1038],[1040,1051],[1059,1071],[1069,1082],[1076,1089],
+  [1087,1098],[1094,1105],[1114,1124],[1119,1131],[1135,1145],
+  [1150,1161],[1176,1190],[1183,1199],[1198,1210],
+  [1209,1220],[1224,1235],[1239,1249],[1245,1259],
+  [1260,1272],[1287,1304],[1301,1314],[1309,1321],[1315,1331],
+  [1344,1360],[1364,1374],[1384,1395],[1409,1420],[1426,1437],[1439,1453]
+];
 
 const SCHED = {
-  wd: { go: KAM_CHB, rt: MAK_CHB_WD },
-  hd: { go: KAM_CHB, rt: MAK_CHB_HD }
+  wd:{ go:KAM_CHB, rt:MAK_CHB_WD },
+  hd:{ go:KAM_CHB, rt:MAK_CHB_HD }
 };
 
-// 方向別情報
-// destAdd: 千葉着 から 最終目的地着 までの目安（分）
-const DIR_INFO = {
-  go: { depSt:'鎌取発', destSt:'幕張着', via:'千葉→総武線', destAdd: 15 },
-  rt: { depSt:'幕張発', destSt:'鎌取着', via:'千葉→外房線', destAdd: 18 }
-};
+// 乗換後の次列車を検索
+function findConn(chibaArr, table) {
+  const minDep = chibaArr + 3; // 乗換3分
+  return table.find(t => t[0] >= minDep) || null;
+}
 
 // ============================================================
 //  状態
 // ============================================================
-let curPage = 0;
-let dayMode = 'wd';
-let dirMode = 'go';
+let curPage = 0, dayMode = 'wd', dirMode = 'go';
 const today = new Date();
-let calY = today.getFullYear();
-let calM = today.getMonth();
+let calY = today.getFullYear(), calM = today.getMonth();
 let HOL = buildHolidays(calY);
 
 // ============================================================
 //  スワイプ
 // ============================================================
 const wrap = document.getElementById('wrap');
-let tx0 = 0, ty0 = 0, sw = false;
-
-wrap.addEventListener('touchstart', e => {
-  tx0 = e.touches[0].clientX; ty0 = e.touches[0].clientY; sw = true;
-}, {passive:true});
-wrap.addEventListener('touchmove', e => {
-  if (!sw) return;
-  if (Math.abs(e.touches[0].clientX - tx0) > Math.abs(e.touches[0].clientY - ty0))
-    e.preventDefault();
-}, {passive:false});
-wrap.addEventListener('touchend', e => {
-  if (!sw) return; sw = false;
-  const dx = e.changedTouches[0].clientX - tx0;
-  const dy = e.changedTouches[0].clientY - ty0;
-  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 44) {
-    if (dx < 0 && curPage < 2) goPage(curPage + 1);
-    if (dx > 0 && curPage > 0) goPage(curPage - 1);
+let tx0=0, ty0=0, sw=false;
+wrap.addEventListener('touchstart', e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].clientY;sw=true;},{passive:true});
+wrap.addEventListener('touchmove', e=>{
+  if(!sw)return;
+  if(Math.abs(e.touches[0].clientX-tx0)>Math.abs(e.touches[0].clientY-ty0))e.preventDefault();
+},{passive:false});
+wrap.addEventListener('touchend', e=>{
+  if(!sw)return; sw=false;
+  const dx=e.changedTouches[0].clientX-tx0, dy=e.changedTouches[0].clientY-ty0;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>44){
+    if(dx<0&&curPage<2)goPage(curPage+1);
+    if(dx>0&&curPage>0)goPage(curPage-1);
   }
 });
 
-function goPage(n) {
-  curPage = n;
-  wrap.style.transform = `translateX(-${n * 33.333}%)`;
-  [0,1,2].forEach(i => document.getElementById('d'+i).classList.toggle('on', i===n));
-  if (n === 2) renderTrains();
+function goPage(n){
+  curPage=n;
+  wrap.style.transform=`translateX(-${n*33.333}%)`;
+  [0,1,2].forEach(i=>document.getElementById('d'+i).classList.toggle('on',i===n));
+  if(n===2)renderTrains();
 }
 
 // ============================================================
 //  時計
 // ============================================================
-const WDAYS = ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
-function p2(n) { return String(n).padStart(2,'0'); }
+const WDAYS=['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
+function p2(n){return String(n).padStart(2,'0');}
 
-let prevSec = -1;
-function tickClock() {
-  const n = new Date();
-  const H = n.getHours(), M = n.getMinutes(), S = n.getSeconds();
-
-  document.getElementById('ch').textContent = p2(H);
-  document.getElementById('cm').textContent = p2(M);
-  document.getElementById('clock-sec').textContent = p2(S);
-
-  // 秒バー
-  const bar = document.getElementById('sec-bar');
-  if (S === 0 && prevSec !== 0) {
-    bar.style.transition = 'none';
-    bar.style.width = '0%';
-    bar.offsetWidth; // reflow
-  }
-  bar.style.transition = S === 0 ? 'none' : 'width .9s linear';
-  bar.style.width = (S / 60 * 100) + '%';
-  prevSec = S;
-
-  document.getElementById('clock-date').textContent =
+let prevSec=-1;
+function tickClock(){
+  const n=new Date();
+  const H=n.getHours(),M=n.getMinutes(),S=n.getSeconds();
+  document.getElementById('ch').textContent=p2(H);
+  document.getElementById('cm').textContent=p2(M);
+  document.getElementById('clock-sec').textContent=p2(S);
+  const bar=document.getElementById('sec-bar');
+  if(S===0&&prevSec!==0){bar.style.transition='none';bar.style.width='0%';bar.offsetWidth;}
+  bar.style.transition=S===0?'none':'width .9s linear';
+  bar.style.width=(S/60*100)+'%';
+  prevSec=S;
+  document.getElementById('clock-date').textContent=
     `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日　${WDAYS[n.getDay()]}`;
-
-  if (curPage === 2) renderTrains();
+  if(curPage===2)renderTrains();
 }
 
 // ============================================================
 //  カレンダー
 // ============================================================
-function renderCal() {
-  // 年をまたぐとき祝日テーブルを再生成
-  if (!HOL || Object.keys(HOL).some(k => !k.startsWith(calY))) {
-    HOL = buildHolidays(calY);
+function renderCal(){
+  if(Object.keys(HOL).length===0||!Object.keys(HOL)[0].startsWith(calY))
+    HOL=buildHolidays(calY);
+  document.getElementById('cal-label').textContent=`${calY}年 ${calM+1}月`;
+  const first=new Date(calY,calM,1).getDay();
+  const last=new Date(calY,calM+1,0).getDate();
+  const pLast=new Date(calY,calM,0).getDate();
+  const tY=today.getFullYear(),tM=today.getMonth(),tD=today.getDate();
+  let h='';
+  for(let i=first-1;i>=0;i--){
+    const col=first-1-i;
+    h+=`<div class="cd other ${col===0?'sun':col===6?'sat':''}">${pLast-i}</div>`;
   }
-
-  document.getElementById('cal-label').textContent = `${calY}年 ${calM+1}月`;
-  const first  = new Date(calY, calM, 1).getDay();
-  const last   = new Date(calY, calM+1, 0).getDate();
-  const pLast  = new Date(calY, calM, 0).getDate();
-  const tY = today.getFullYear(), tM = today.getMonth(), tD = today.getDate();
-
-  let h = '';
-
-  // 前月の日
-  for (let i = first - 1; i >= 0; i--) {
-    const col = first - 1 - i;
-    h += `<div class="cd other ${col===0?'sun':col===6?'sat':''}">${pLast - i}</div>`;
+  for(let d=1;d<=last;d++){
+    const col=(first+d-1)%7;
+    const isT=d===tD&&calY===tY&&calM===tM;
+    const isH=HOL[`${calY}-${calM+1}-${d}`];
+    let cls=col===0?'sun':col===6?'sat':isH?'hol':'';
+    if(isT)cls+=' today';
+    h+=`<div class="cd ${cls}">${d}</div>`;
   }
-
-  // 今月の日
-  for (let d = 1; d <= last; d++) {
-    const col = (first + d - 1) % 7;
-    const isT = d === tD && calY === tY && calM === tM;
-    const key = `${calY}-${calM+1}-${d}`;
-    const isH = HOL[key];
-    let cls = '';
-    if (col === 0)      cls = 'sun';
-    else if (col === 6) cls = 'sat';
-    else if (isH)       cls = 'hol'; // 平日祝日
-    if (isT) cls += ' today';
-    h += `<div class="cd ${cls}">${d}</div>`;
+  const total=Math.ceil((first+last)/7)*7;
+  for(let d=1;d<=total-first-last;d++){
+    const col=(first+last+d-1)%7;
+    h+=`<div class="cd other ${col===0?'sun':col===6?'sat':''}">${d}</div>`;
   }
-
-  // 翌月の日
-  const total = Math.ceil((first + last) / 7) * 7;
-  for (let d = 1; d <= total - first - last; d++) {
-    const col = (first + last + d - 1) % 7;
-    h += `<div class="cd other ${col===0?'sun':col===6?'sat':''}">${d}</div>`;
-  }
-
-  document.getElementById('cal-days').innerHTML = h;
+  document.getElementById('cal-days').innerHTML=h;
 }
-
-document.getElementById('cal-prev').onclick = () => {
-  calM--; if (calM < 0) { calM = 11; calY--; }
-  renderCal();
-};
-document.getElementById('cal-next').onclick = () => {
-  calM++; if (calM > 11) { calM = 0; calY++; }
-  renderCal();
-};
+document.getElementById('cal-prev').onclick=()=>{calM--;if(calM<0){calM=11;calY--;}renderCal();};
+document.getElementById('cal-next').onclick=()=>{calM++;if(calM>11){calM=0;calY++;}renderCal();};
 
 // ============================================================
 //  時刻表
 // ============================================================
-function setDay(mode) {
-  dayMode = mode;
-  document.getElementById('btn-wd').classList.toggle('on', mode==='wd');
-  document.getElementById('btn-hd').classList.toggle('on', mode==='hd');
+function setDay(m){
+  dayMode=m;
+  document.getElementById('btn-wd').classList.toggle('on',m==='wd');
+  document.getElementById('btn-hd').classList.toggle('on',m==='hd');
   renderTrains();
 }
-function setDir(mode) {
-  dirMode = mode;
-  document.getElementById('btn-go').classList.toggle('on', mode==='go');
-  document.getElementById('btn-rt').classList.toggle('on', mode==='rt');
+function setDir(m){
+  dirMode=m;
+  document.getElementById('btn-go').classList.toggle('on',m==='go');
+  document.getElementById('btn-rt').classList.toggle('on',m==='rt');
   renderTrains();
 }
-
-function fmt(mins) {
-  const h = Math.floor(mins / 60) % 24;
-  return `${p2(h)}:${p2(mins % 60)}`;
+function fmt(m){
+  if(m==null)return'--:--';
+  const h=Math.floor(m/60)%24;
+  return`${p2(h)}:${p2(m%60)}`;
 }
 
-function renderTrains() {
-  const n   = new Date();
-  let now   = n.getHours() * 60 + n.getMinutes();
-  if (n.getHours() < 5) now += 1440;
+function renderTrains(){
+  const n=new Date();
+  let now=n.getHours()*60+n.getMinutes();
+  if(n.getHours()<5)now+=1440;
 
-  const list = SCHED[dayMode][dirMode];
-  const info = DIR_INFO[dirMode];
-  const upcoming = list.filter(t => t[0] >= now && t[0] <= now + 180).slice(0, 5);
+  const list=SCHED[dayMode][dirMode];
+  const upcoming=list.filter(t=>t[0]>=now&&t[0]<=now+180).slice(0,5);
 
-  if (!upcoming.length) {
-    document.getElementById('train-list').innerHTML =
+  if(!upcoming.length){
+    document.getElementById('train-list').innerHTML=
       `<div class="no-train">この時間帯の電車はありません</div>`;
     return;
   }
 
-  const labels = ['次の電車','その次','3本目','4本目','5本目'];
-  let h = '';
-  upcoming.forEach((t, i) => {
-    const wait  = t[0] - now;
-    const cdwn  = wait === 0 ? '発車中' : wait === 1 ? 'あと1分' : `あと${wait}分`;
-    const dest  = fmt(t[1] + info.destAdd); // 目的地 目安到着
-    h += `
+  const labels=['次の電車','その次','3本目','4本目','5本目'];
+  let h='';
+
+  upcoming.forEach((t,i)=>{
+    const wait=t[0]-now;
+    const cdwn=wait===0?'発車中':wait===1?'あと1分':`あと${wait}分`;
+    const chibaArr=t[1]; // 千葉着
+
+    let destTime, destLabel, destCls='dest';
+
+    if(dirMode==='go'){
+      // 鎌取→幕張：千葉着+3乗換+10運賃 = +13
+      destTime=chibaArr+13;
+      destLabel='幕張着';
+    } else {
+      // 幕張→鎌取：千葉着+3乗換→CHB_KAM で次列車
+      const conn=findConn(chibaArr,CHB_KAM);
+      destTime=conn?conn[1]:null;
+      destLabel='鎌取着';
+      if(!conn)destCls='miss';
+    }
+
+    const via=dirMode==='go'?'千葉 → 総武線 → 幕張':'千葉 → 外房線 → 鎌取';
+
+    h+=`
       <div class="tcard ${i===0?'nxt':''}">
         <div class="tcard-top">
           <div class="tc-left">
             <div class="tc-label">${labels[i]}</div>
             <div class="tc-dep">${fmt(t[0])}</div>
-            <div class="tc-dep-st">${info.depSt}</div>
+            <div class="tc-dep-st">${dirMode==='go'?'鎌取発':'幕張発'}</div>
           </div>
           <div class="tc-right">
             <div class="tc-row">
               <span class="tc-lbl">千葉着</span>
-              <span class="tc-val">${fmt(t[1])}</span>
+              <span class="tc-val">${fmt(chibaArr)}</span>
             </div>
-            <div class="tc-row dest">
-              <span class="tc-lbl">${info.destSt}(目安)</span>
-              <span class="tc-val">${dest}</span>
+            <div class="tc-row ${destCls}">
+              <span class="tc-lbl">${destLabel}</span>
+              <span class="tc-val">${destTime?fmt(destTime):'接続なし'}</span>
             </div>
           </div>
         </div>
         <div class="tcard-bot">
-          <span class="tc-via">${info.via}</span>
-          ${i===0 ? `<span class="tc-cdwn">${cdwn}</span>` : ''}
+          <span class="tc-via">${via}</span>
+          ${i===0?`<span class="tc-cdwn">${cdwn}</span>`:''}
         </div>
       </div>`;
   });
-  document.getElementById('train-list').innerHTML = h;
+
+  document.getElementById('train-list').innerHTML=h;
 }
 
 // ============================================================
 //  初期化
 // ============================================================
-const dw = today.getDay();
-const todayKey = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
-dayMode = (dw===0 || dw===6 || HOL[todayKey]) ? 'hd' : 'wd';
+const dw=today.getDay();
+const todayKey=`${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+dayMode=(dw===0||dw===6||HOL[todayKey])?'hd':'wd';
 setDay(dayMode);
 setDir('go');
 renderCal();
 tickClock();
-setInterval(tickClock, 1000);
+setInterval(tickClock,1000);
+applyTheme(THEMES[themeIdx]);
 </script>
 </body>
 </html>
