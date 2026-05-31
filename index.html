@@ -277,6 +277,9 @@
     .tc-row.dest .tc-lbl { color: rgba(79,195,247,.65); }
     .tc-row.dest .tc-val { color: #81d4fa; font-size: clamp(18px,4.8vw,24px); }
     .tc-row.miss .tc-val { color: rgba(255,120,120,.75); font-size: clamp(13px,3.5vw,17px); }
+    .tc-row.dep .tc-val  { font-size: clamp(14px,3.8vw,20px); color: rgba(255,255,255,.55); }
+    .tc-row.sog .tc-lbl  { color: var(--ac); opacity:.55; }
+    .tc-row.sog .tc-val  { font-size: clamp(14px,3.8vw,20px); color: rgba(255,255,255,.65); }
 
     .tcard-bot {
       display: flex; align-items: center; justify-content: space-between;
@@ -852,7 +855,28 @@ function renderTrains(){
       const connTable=dayMode==='wd'?CHB_MAK_WD:CHB_MAK_HD;
       const makConn=chibaArr?findConn(chibaArr,connTable):null;
       const destTime=makConn?makConn[1]:null;
+      const chibaDepTime=makConn?makConn[0]:null; // 千葉発（総武線）
       const destCls=makConn?'dest':'miss';
+      const sogDepTime=viaTag==='蘇我乗換'&&sogConn?sogConn[0]:null; // 蘇我発
+
+      // 右パネル行を組み立て
+      let rightRows='';
+      if(viaTag==='蘇我乗換'&&sogDepTime){
+        rightRows+=`<div class="tc-row sog">
+          <span class="tc-lbl">蘇我発</span>
+          <span class="tc-val">${fmt(sogDepTime)}</span></div>`;
+      }
+      rightRows+=`<div class="tc-row">
+        <span class="tc-lbl">千葉着</span>
+        <span class="tc-val">${chibaArr?fmt(chibaArr):'--:--'}</span></div>`;
+      if(chibaDepTime){
+        rightRows+=`<div class="tc-row dep">
+          <span class="tc-lbl">千葉発</span>
+          <span class="tc-val">${fmt(chibaDepTime)}</span></div>`;
+      }
+      rightRows+=`<div class="tc-row ${destCls}">
+        <span class="tc-lbl">幕張着</span>
+        <span class="tc-val">${destTime?fmt(destTime):'接続なし'}</span></div>`;
 
       h+=`
         <div class="tcard ${i===0?'nxt':''}">
@@ -862,16 +886,7 @@ function renderTrains(){
               <div class="tc-dep">${fmt(kamDep)}</div>
               <div class="tc-dep-st">鎌取発</div>
             </div>
-            <div class="tc-right">
-              <div class="tc-row">
-                <span class="tc-lbl">千葉着</span>
-                <span class="tc-val">${chibaArr?fmt(chibaArr):'--:--'}</span>
-              </div>
-              <div class="tc-row ${destCls}">
-                <span class="tc-lbl">幕張着</span>
-                <span class="tc-val">${destTime?fmt(destTime):'接続なし'}</span>
-              </div>
-            </div>
+            <div class="tc-right">${rightRows}</div>
           </div>
           <div class="tcard-bot">
             <span class="tc-via">${viaTag==='蘇我乗換'?'鎌取→蘇我乗換→千葉→幕張':'千葉 → 総武線 → 幕張'}</span>
@@ -893,6 +908,7 @@ function renderTrains(){
       const chibaArr=t[1];
       const conn=findConn(chibaArr,CHB_KAM);
       const destTime=conn?conn[1]:null;
+      const chibaDepKam=conn?conn[0]:null; // 千葉発（外房線）
       const destCls=conn?'dest':'miss';
       h+=`
         <div class="tcard ${i===0?'nxt':''}">
@@ -907,6 +923,9 @@ function renderTrains(){
                 <span class="tc-lbl">千葉着</span>
                 <span class="tc-val">${fmt(chibaArr)}</span>
               </div>
+              ${chibaDepKam?`<div class="tc-row dep">
+                <span class="tc-lbl">千葉発</span>
+                <span class="tc-val">${fmt(chibaDepKam)}</span></div>`:''}
               <div class="tc-row ${destCls}">
                 <span class="tc-lbl">鎌取着</span>
                 <span class="tc-val">${destTime?fmt(destTime):'接続なし'}</span>
