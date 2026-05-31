@@ -93,8 +93,8 @@
     }
 
     #clock-time {
-      font-size: clamp(90px, min(34vw, 43vh), 220px);
-      font-weight: 100; letter-spacing: -.03em; line-height: 1;
+      font-size: clamp(140px, 40vw, 320px);
+      font-weight: 100; letter-spacing: -.05em; line-height: 1;
       font-variant-numeric: tabular-nums;
       background: linear-gradient(160deg, var(--gf) 0%, var(--gm) 52%, var(--gt) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -621,6 +621,43 @@ const CHB_MAK_HD = mkSched({
   23:[3,13,22,31,41]
 }, 10);
 
+// 鎌取→蘇我 全列車 [鎌取発, 蘇我着=鎌取発+5]（平日・休日共通）
+const KAM_SOG = mkSched({
+  5:[32], 6:[2,24,38,42,54],
+  7:[4,8,15,19,27,39,44,52],
+  8:[1,8,14,30,37,53],
+  9:[5,21,34,50],
+  10:[12,22,36,49], 11:[2,14,21,40,50],
+  12:[12,25,40,51], 13:[13,25,39,57],
+  14:[13,25,40,52], 15:[13,40,53],
+  16:[13,35,50], 17:[10,35,43,50],
+  18:[10,16,20,37,53], 19:[12,26,40,49],
+  20:[0,8,25,38,47], 21:[0,17,26,35,50],
+  22:[25,34], 23:[2,32]
+}, 5);
+
+// 蘇我→千葉 全列車（外房線+内房線合算）[蘇我発, 千葉着]
+const SOG_CHB = [
+  [332,338],[338,344],[363,369],[370,376],[384,390],[393,399],[403,409],[411,417],
+  [419,425],[423,429],[429,435],[433,439],[436,442],[441,447],[444,452],[449,455],
+  [455,462],[459,465],[464,470],[469,475],[472,478],[479,484],[483,490],[489,495],
+  [494,500],[498,504],[503,511],[508,514],[516,522],[522,528],[528,534],[538,544],
+  [545,550],[550,556],[560,566],[565,571],[571,576],[577,582],[580,586],[588,594],
+  [595,601],[602,608],[613,619],[617,623],[627,633],[633,639],[643,649],[655,661],
+  [661,667],[670,675],[680,686],[686,691],[693,699],[705,712],[715,721],[723,729],
+  [738,744],[752,757],[757,763],[765,772],[772,777],[783,789],[800,806],[813,819],
+  [818,823],[825,831],[832,838],[843,849],[860,866],[873,879],[878,884],[885,890],
+  [892,898],[903,909],[919,925],[933,939],[945,951],[950,956],[958,964],[970,975],
+  [981,987],[996,1002],[1002,1009],[1009,1015],[1020,1025],[1025,1031],[1034,1039],
+  [1039,1043],[1043,1049],[1054,1058],[1057,1062],[1061,1066],[1068,1074],[1072,1077],
+  [1075,1081],[1085,1091],[1096,1101],[1098,1104],[1102,1107],[1108,1113],[1113,1119],
+  [1123,1128],[1131,1136],[1140,1145],[1148,1154],[1154,1160],[1157,1163],[1161,1167],
+  [1171,1177],[1178,1184],[1186,1191],[1194,1200],[1198,1203],[1205,1211],[1208,1214],
+  [1216,1222],[1228,1234],[1235,1241],[1244,1250],[1254,1260],[1267,1272],[1271,1277],
+  [1280,1285],[1285,1290],[1293,1299],[1300,1305],[1306,1312],[1318,1324],[1335,1341],
+  [1350,1356],[1361,1367],[1372,1378],[1387,1393],[1399,1405],[1417,1423],[1421,1426]
+];
+
 // 千葉 → 鎌取（外房線下り）[千葉発, 鎌取着]  ※土日データ・平日共通使用
 const CHB_KAM = [
   [321,331],[341,354],[355,368],[365,375],[388,400],
@@ -767,67 +804,111 @@ function renderTrains(){
   let now=n.getHours()*60+n.getMinutes();
   if(n.getHours()<5)now+=1440;
 
-  const list=SCHED[dayMode][dirMode];
-  const upcoming=list.filter(t=>t[0]>=now&&t[0]<=now+180).slice(0,5);
-
-  if(!upcoming.length){
-    document.getElementById('train-list').innerHTML=
-      `<div class="no-train">この時間帯の電車はありません</div>`;
-    return;
-  }
-
   const labels=['次の電車','その次','3本目','4本目','5本目'];
   let h='';
 
-  upcoming.forEach((t,i)=>{
-    const wait=t[0]-now;
-    const cdwn=wait===0?'発車中':wait===1?'あと1分':`あと${wait}分`;
-    const chibaArr=t[1]; // 千葉着
-
-    let destTime, destLabel, destCls='dest';
-
-    if(dirMode==='go'){
-      // 鎌取→幕張：千葉着+3乗換→CHB_MAK で次の各停を検索
-      const connTable=dayMode==='wd'?CHB_MAK_WD:CHB_MAK_HD;
-      const conn=findConn(chibaArr,connTable);
-      destTime=conn?conn[1]:null;
-      destLabel='幕張着';
-      if(!conn)destCls='miss';
-    } else {
-      // 幕張→鎌取：千葉着+3乗換→CHB_KAM で次列車
-      const conn=findConn(chibaArr,CHB_KAM);
-      destTime=conn?conn[1]:null;
-      destLabel='鎌取着';
-      if(!conn)destCls='miss';
+  if(dirMode==='go'){
+    // 鎌取→幕張：KAM_SOGで全発車を取得し、直通 vs 蘇我乗換を比較
+    const upcoming=KAM_SOG.filter(t=>t[0]>=now&&t[0]<=now+180).slice(0,5);
+    if(!upcoming.length){
+      document.getElementById('train-list').innerHTML=
+        '<div class="no-train">この時間帯の電車はありません</div>';return;
     }
+    upcoming.forEach((sogT,i)=>{
+      const kamDep=sogT[0], sogArr=sogT[1];
+      const wait=kamDep-now;
+      const cdwn=wait===0?'発車中':wait===1?'あと1分':`あと${wait}分`;
 
-    const via=dirMode==='go'?'千葉 → 総武線 → 幕張':'千葉 → 外房線 → 鎌取';
+      // 直通オプション（KAM_CHBにある列車）
+      const direct=KAM_CHB.find(t=>t[0]===kamDep);
+      const chibaArrDirect=direct?direct[1]:null;
 
-    h+=`
-      <div class="tcard ${i===0?'nxt':''}">
-        <div class="tcard-top">
-          <div class="tc-left">
-            <div class="tc-label">${labels[i]}</div>
-            <div class="tc-dep">${fmt(t[0])}</div>
-            <div class="tc-dep-st">${dirMode==='go'?'鎌取発':'幕張発'}</div>
-          </div>
-          <div class="tc-right">
-            <div class="tc-row">
-              <span class="tc-lbl">千葉着</span>
-              <span class="tc-val">${fmt(chibaArr)}</span>
+      // 蘇我乗換オプション
+      const sogConn=findConn(sogArr,SOG_CHB);
+      const chibaArrSOG=sogConn?sogConn[1]:null;
+
+      // 早い方を採用
+      let chibaArr, viaTag;
+      if(chibaArrDirect!==null&&(chibaArrSOG===null||chibaArrDirect<=chibaArrSOG)){
+        chibaArr=chibaArrDirect; viaTag='直通';
+      } else if(chibaArrSOG!==null){
+        chibaArr=chibaArrSOG; viaTag='蘇我乗換';
+      } else {
+        chibaArr=null; viaTag='―';
+      }
+
+      // 千葉→幕張接続
+      const connTable=dayMode==='wd'?CHB_MAK_WD:CHB_MAK_HD;
+      const makConn=chibaArr?findConn(chibaArr,connTable):null;
+      const destTime=makConn?makConn[1]:null;
+      const destCls=makConn?'dest':'miss';
+
+      h+=`
+        <div class="tcard ${i===0?'nxt':''}">
+          <div class="tcard-top">
+            <div class="tc-left">
+              <div class="tc-label">${labels[i]}</div>
+              <div class="tc-dep">${fmt(kamDep)}</div>
+              <div class="tc-dep-st">鎌取発</div>
             </div>
-            <div class="tc-row ${destCls}">
-              <span class="tc-lbl">${destLabel}</span>
-              <span class="tc-val">${destTime?fmt(destTime):'接続なし'}</span>
+            <div class="tc-right">
+              <div class="tc-row">
+                <span class="tc-lbl">千葉着</span>
+                <span class="tc-val">${chibaArr?fmt(chibaArr):'--:--'}</span>
+              </div>
+              <div class="tc-row ${destCls}">
+                <span class="tc-lbl">幕張着</span>
+                <span class="tc-val">${destTime?fmt(destTime):'接続なし'}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="tcard-bot">
-          <span class="tc-via">${via}</span>
-          ${i===0?`<span class="tc-cdwn">${cdwn}</span>`:''}
-        </div>
-      </div>`;
-  });
+          <div class="tcard-bot">
+            <span class="tc-via">${viaTag==='蘇我乗換'?'鎌取→蘇我乗換→千葉→幕張':'千葉 → 総武線 → 幕張'}</span>
+            ${i===0?`<span class="tc-cdwn">${cdwn}</span>`:''}
+          </div>
+        </div>`;
+    });
+  } else {
+    // 幕張→鎌取
+    const list=SCHED[dayMode][dirMode];
+    const upcoming=list.filter(t=>t[0]>=now&&t[0]<=now+180).slice(0,5);
+    if(!upcoming.length){
+      document.getElementById('train-list').innerHTML=
+        '<div class="no-train">この時間帯の電車はありません</div>';return;
+    }
+    upcoming.forEach((t,i)=>{
+      const wait=t[0]-now;
+      const cdwn=wait===0?'発車中':wait===1?'あと1分':`あと${wait}分`;
+      const chibaArr=t[1];
+      const conn=findConn(chibaArr,CHB_KAM);
+      const destTime=conn?conn[1]:null;
+      const destCls=conn?'dest':'miss';
+      h+=`
+        <div class="tcard ${i===0?'nxt':''}">
+          <div class="tcard-top">
+            <div class="tc-left">
+              <div class="tc-label">${labels[i]}</div>
+              <div class="tc-dep">${fmt(t[0])}</div>
+              <div class="tc-dep-st">幕張発</div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-row">
+                <span class="tc-lbl">千葉着</span>
+                <span class="tc-val">${fmt(chibaArr)}</span>
+              </div>
+              <div class="tc-row ${destCls}">
+                <span class="tc-lbl">鎌取着</span>
+                <span class="tc-val">${destTime?fmt(destTime):'接続なし'}</span>
+              </div>
+            </div>
+          </div>
+          <div class="tcard-bot">
+            <span class="tc-via">千葉 → 外房線 → 鎌取</span>
+            ${i===0?`<span class="tc-cdwn">${cdwn}</span>`:''}
+          </div>
+        </div>`;
+    });
+  }
 
   document.getElementById('train-list').innerHTML=h;
 }
