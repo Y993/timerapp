@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-title" content="時刻表">
   <meta name="theme-color" content="#060612">
   <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;200;300&display=swap" rel="stylesheet">
   <title>鎌取⇄幕張</title>
   <style>
     /* ══ テーマ変数（JS から上書き） ══ */
@@ -86,15 +89,17 @@
     }
 
     .clock-sup {
+      font-family: 'Josefin Sans', -apple-system, sans-serif;
       font-size: clamp(7px, 1.8vw, 10px);
       letter-spacing: .7em; color: var(--ac); opacity: .38;
-      font-weight: 400; margin-bottom: clamp(4px, 1.5vw, 10px);
+      font-weight: 200; margin-bottom: clamp(4px, 1.5vw, 10px);
       text-transform: uppercase; transition: color .4s;
     }
 
     #clock-time {
+      font-family: 'Josefin Sans', -apple-system, sans-serif;
       font-size: clamp(140px, 40vw, 320px);
-      font-weight: 100; letter-spacing: -.05em; line-height: 1;
+      font-weight: 100; letter-spacing: .04em; line-height: 1;
       font-variant-numeric: tabular-nums;
       background: linear-gradient(160deg, var(--gf) 0%, var(--gm) 52%, var(--gt) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -301,11 +306,12 @@
         width: 100%;
       }
       .clock-sup { display: none; }
-      #clock-time { font-size: clamp(140px, 60vh, 320px); white-space: nowrap; }
+      #clock-time { font-size: clamp(90px, 43vh, 200px); white-space: nowrap; }
+      .clock-wrap { max-width: 100%; }
       .clock-sub  { align-items: flex-start; margin-top: 0; }
-      .sec-row    { width: clamp(160px, 26vw, 300px); }
-      #clock-sec  { font-size: clamp(18px, 5.5vh, 28px); }
-      #clock-date { font-size: clamp(16px, 4.5vh, 24px); }
+      .sec-row    { width: clamp(140px, 24vw, 280px); }
+      #clock-sec  { font-size: clamp(16px, 5vh, 26px); }
+      #clock-date { font-size: clamp(14px, 4vh, 22px); }
       .theme-dots { margin-top: clamp(8px, 2vh, 14px); }
       #theme-name { bottom: 44px; }
 
